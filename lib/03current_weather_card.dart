@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '02weather_screen.dart';
 
 class CurrentWeatherCard extends StatelessWidget {
-  const CurrentWeatherCard({super.key});
+  const CurrentWeatherCard({super.key, required this.temp});
+  final double temp;
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -34,10 +36,10 @@ class CurrentWeatherCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '72°',
+                  '$temp °K',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 64,
+                    fontSize: 46,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -9,16 +9,18 @@ class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
 
   @override
-  State<WeatherScreen> createState() => _WeatherScreen();
+  State<WeatherScreen> createState() => WeatherScreens();
 }
 
 //api key : 7467bfb1c6ed64690fdc701bdca1ba16
 
-class _WeatherScreen extends State<WeatherScreen> {
+class WeatherScreens extends State<WeatherScreen> {
+  late final res;
+  late bool isWeather;
+  late Future<Map<String, dynamic>> weather;
+  late final currentTemp;
   //current weather Function//
   Future<Map<String, dynamic>> currentWeather() async {
-    late final res;
-    late bool isWeather;
     try {
       res = await http.get(
         Uri.parse(
@@ -50,62 +52,83 @@ class _WeatherScreen extends State<WeatherScreen> {
   @override
   void initState() {
     super.initState();
-    final data = currentWeather();
+    weather = currentWeather();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade800,
-              Colors.blue.shade600,
-              Colors.blue.shade400,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header with location
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.location_on, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'New York, USA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+      body: FutureBuilder(
+        future: weather,
+        builder: (context, asyncSnapshot) {
+          if (asyncSnapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator.adaptive());
+          }
+
+          //ERROR DETECTION
+          if (asyncSnapshot.hasError) {
+            return Text(asyncSnapshot.error.toString());
+          }
+
+          //DATA EXTRACTION
+
+          final data = asyncSnapshot.data!;
+          final city = data['name'];
+          final country = data['sys']['country'];
+          final currentTemp = data['main']['temp'];
+
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.blue.shade800,
+                  Colors.blue.shade600,
+                  Colors.blue.shade400,
+                ],
               ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Header with location
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_on, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          '$city ,$country',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-              // Current weather card
-              CurrentWeatherCard(),
+                  // Current weather card
+                  CurrentWeatherCard(temp: currentTemp),
 
-              SizedBox(height: 20),
+                  SizedBox(height: 20),
 
-              // Forecast horizontal scroll
-              ForecastCards(),
+                  // Forecast horizontal scroll
+                  ForecastCards(),
 
-              SizedBox(height: 20),
+                  SizedBox(height: 20),
 
-              // Additional weather info
-              AdditionalWeatherInfo(),
-            ],
-          ),
-        ),
+                  // Additional weather info
+                  AdditionalWeatherInfo(),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
